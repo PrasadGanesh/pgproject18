@@ -3,8 +3,8 @@ import math
 print("Start of the program")
 
 ###___Taking boundries of rectangele__###
-x_bound_min, x_bound_max=0,100
-y_bound_min, y_bound_max=0,100
+x_bound_min, x_bound_max=0,400
+y_bound_min, y_bound_max=0,400
 
 ##___take the width and height for bucket area from user___##
 x_width=int(input("Enter width(x)"))
