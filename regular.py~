@@ -1,19 +1,15 @@
-import math
 
 class Regular():
 
     def __init__(self):
-        self.x_max = 400
-        self.y_max = 400
+        x_max = 400
+        y_max = 400
 
-        self.cut_along_x = int(input("Enter block size along x: "))
-        self.cut_along_y = int(input("Enter block size along y: "))
+        cut_along_x = int(input("Enter block size along x"))
+        cut_along_y = int(input("Enter block size along y"))
 
-        self.x_scale = range(self.cut_along_x, self.x_max, self.cut_along_x) + [self.x_max]
-        self.y_scale = range(self.cut_along_y, self.y_max, self.cut_along_y) + [self.y_max]
-
-        for i in range()
-        mapper=[]
+        x_scale = range(cut_along_x, x_max, cut_along_x) + x_max
+        y_scale = range(cut_along_y, y_max, cut_along_y) + y_max
 
     def insert(self, id, x, y):
         pass
@@ -23,9 +19,9 @@ class Regular():
 
     def get_all_els(self, block_number):
         pass
-
-    # this function gives indices for a point, of the cell it is in
-    def give_indices_of_2dcell(self, x, y):
+	
+	# this function gives indices for a point, of the cell it is in
+def give_indices_of_2dcell(self):
 		i=0;j=0
 		while j < len(self.x_scale):
 		    if x <= self.x_scale[j]:
@@ -38,12 +34,12 @@ class Regular():
 		    i+=1
 
 		return (i,j)
-
-    def get_cell_no(self, index_i, index_j):
+		
+	def get_cell_no(self, index_i, index_j):
 		cell_no = (len(self.x_scale) * index_i) + index_j
 		return cell_no
-
-    def get_x_y_for_euclidian_dist(self, query_i, query_j, cell_i, cell_j):
+		
+	def get_x_y_for_euclidian_dist(self, query_i, query_j, cell_i, cell_j):
 
 		if query_i == cell_i:
 
@@ -97,26 +93,26 @@ class Regular():
 		        x_point = self.x_scale[cell_j]
 		        y_point = self.y_scale[cell_i]
 		return (x_point, y_point)
-
-    def get_euclidian_dist(self, query_x, query_y, data_x, data_y):
+	
+	def get_euclidian_dist(self, query_x, query_y, data_x, data_y):
     	return math.sqrt(math.pow((data_x-query_x),2) + math.pow((data_y-query_y),2))
-
+    	
     ''' cycle returns a list of tuples [(cell_no, euclidean_dist),()...]
     takes input as x and y for query point and
     c for cycle no.
 
 	'''
-    def cycle(self, query_x, query_y, cycle_no):
+	def cycle(self, query_x, query_y, cycle_no):
 		cycle = []
 
-		index_i, index_j = self.give_indices_of_2dcell(query_x, query_y)
+		index_i, index_j = give_indices_of_2dcell(query_x, query_y)
 		cycle_cell_i, cycle_cell_j = index_i, index_j + cycle_no
 
 		if cycle_cell_i in range(len(self.y_scale)) and cycle_cell_j in range(len(self.x_scale)):
-		    cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		    cycle_cell_x, cycle_cell_y = get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
 
-		    euclidian_dist = self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
-		    cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
+		    euclidian_dist = get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
+		    cell_no = get_cell_no(cycle_cell_i, cycle_cell_j)
 
 		    cycle.append((cell_no, euclidian_dist))
 
@@ -127,9 +123,9 @@ class Regular():
 		        if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		            continue
 
-		        cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
-		        euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
-		        cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
+		        cycle_cell_x, cycle_cell_y = get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		        euclidian_dist =  get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
+		        cell_no = get_cell_no(cycle_cell_i, cycle_cell_j)
 
 		        cycle.append((cell_no, euclidian_dist))
 
@@ -139,9 +135,9 @@ class Regular():
 
 		        if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		            continue
-		        cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
-		        euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
-		        cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
+		        cycle_cell_x, cycle_cell_y = get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		        euclidian_dist =  get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
+		        cell_no = get_cell_no(cycle_cell_i, cycle_cell_j)
 
 		        cycle.append((cell_no, euclidian_dist))
 
@@ -151,9 +147,9 @@ class Regular():
 		        if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		            continue
 
-		        cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
-		        euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
-		        cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
+		        cycle_cell_x, cycle_cell_y = get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		        euclidian_dist =  get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
+		        cell_no = get_cell_no(cycle_cell_i, cycle_cell_j)
 
 		        cycle.append((cell_no, euclidian_dist))
 
@@ -163,9 +159,9 @@ class Regular():
 		        if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		            continue
 
-		        cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
-		        euclidian_dist = self. get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
-		        cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
+		        cycle_cell_x, cycle_cell_y = get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		        euclidian_dist =  get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
+		        cell_no = get_cell_no(cycle_cell_i, cycle_cell_j)
 
 		        cycle.append((cell_no, euclidian_dist))
 
@@ -175,15 +171,15 @@ class Regular():
 		        if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		            continue
 
-		        cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
-		        euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
-		        cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
+		        cycle_cell_x, cycle_cell_y = get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		        euclidian_dist =  get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
+		        cell_no = get_cell_no(cycle_cell_i, cycle_cell_j)
 
 		        cycle.append((cell_no, euclidian_dist))
 		return cycle
 
 
-class Mapper():
-    def __init__(self):
-        mapper=[]
+reg=Rugular()
+
+
 
