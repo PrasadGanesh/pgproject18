@@ -8,15 +8,43 @@ class Regular():
 
         self.cut_along_x = int(input("Enter block size along x: "))
         self.cut_along_y = int(input("Enter block size along y: "))
+	
+	self.bucket_size = int(input("Enter the bucket size: "))
 
         self.x_scale = range(self.cut_along_x, self.x_max, self.cut_along_x) + [self.x_max]
         self.y_scale = range(self.cut_along_y, self.y_max, self.cut_along_y) + [self.y_max]
 
-        for i in range()
-        mapper=[]
+	self.mapper = []
+
+        for i in range(len(self.x_scale)*len(self.y_scale)):
+		filename = "{}-bucket.txt".format(i)
+        	with open(filename, "w+") as opened_file:
+			pass
+		self.mapper.insert(i,(filename, filename, 0)) 
 
     def insert(self, id, x, y):
-        pass
+	bucket, last_bucket, elements_in_bucket = 0, 1, 2
+
+        i,j = self.get_indices_of_2dcell(x,y)
+	mapper_index = self.get_cell_no(i, j)
+	
+	if self.mapper[mapper_index][elements_in_bucket] < self.bucket_size:
+		with open(self.mapper[mapper_index][bucket], "a+") as opened_file:
+			opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
+	elif self.mapper[mapper_index][elements_in_bucket] % self.bucket_size == 0:
+		new_filename = "{}".format(mapper_index)+self.mapper[mapper_index][last_bucket]
+		with open(new_filename , "a+") as opened_file:
+			opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
+		with open(self.mapper[mapper_index][last_bucket], "a+") as opened_file:
+			opened_file.write(new_filename)
+		self.mapper[mapper_index][last_bucket] = new_filename
+	else:
+		with open(self.mapper[mapper_index][last_bucket], "a+") as opened_file:
+			opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
+
+	self.mapper[mapper_index][elements_in_bucket] += 1	
+			
+		
 
     def get_all_els(self, x, y):
         pass
@@ -25,7 +53,7 @@ class Regular():
         pass
 
     # this function gives indices for a point, of the cell it is in
-    def give_indices_of_2dcell(self, x, y):
+    def get_indices_of_2dcell(self, x, y):
 		i=0;j=0
 		while j < len(self.x_scale):
 		    if x <= self.x_scale[j]:
@@ -109,7 +137,7 @@ class Regular():
     def cycle(self, query_x, query_y, cycle_no):
 		cycle = []
 
-		index_i, index_j = self.give_indices_of_2dcell(query_x, query_y)
+		index_i, index_j = self.get_indices_of_2dcell(query_x, query_y)
 		cycle_cell_i, cycle_cell_j = index_i, index_j + cycle_no
 
 		if cycle_cell_i in range(len(self.y_scale)) and cycle_cell_j in range(len(self.x_scale)):
