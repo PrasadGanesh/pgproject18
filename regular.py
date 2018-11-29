@@ -16,6 +16,9 @@ class Regular():
 
 	self.mapper = []
 
+        self.bucket_access_record=[]
+
+
         for i in range(len(self.x_scale)*len(self.y_scale)):
 		filename = "{}-bucket.txt".format(i)
         	with open(filename, "w+") as opened_file:
@@ -73,7 +76,8 @@ class Regular():
 
 
     def get_all_els(self, cell_no):
-        filename = self.mapper[cell_no][0]
+        bucket, last_bucket, num_of_elem = 0,1,2
+        filename = self.mapper[cell_no][bucket]
         points=[]
 
         while(True):
@@ -126,39 +130,28 @@ class Regular():
 
 
 
-    def get_x_y_for_euclidian_dist(self, query_i, query_j, cell_i, cell_j):
+    def get_x_y_for_euclidian_dist(self, query_x, query_y, cell_i, cell_j):
+                query_i, query_j = self.get_indices_of_2dcell(query_x, query_y)
 
 		if query_i == cell_i:
 
 		    if query_j < cell_j:
-		        if cell_i == 0:
-		            y_point = self.y_scale[cell_i]/2
-		        else:
-		            y_point=(self.y_scale[cell_i-1]+self.y_scale[cell_i])/2
-		            x_point=self.x_scale[cell_j-1];
+		        y_point=query_y
+		        x_point=self.x_scale[cell_j-1];
 
 		    elif query_j > cell_j:
-		        if cell_i == 0:
-		            y_point = self.y_scale[cell_i]/2
-		        else:
-		            x_point=self.x_scale[cell_j]
-		            y_point=(self.y_scale[cell_i-1] + self.y_scale[cell_i])/2
+		        x_point=self.x_scale[cell_j]
+		        y_point=query_y
 
 		elif query_j == cell_j:
 
 		    if query_i > cell_i:
-		        if cell_j == 0:
-		            x_point = self.x_scale[cell_j]/2
-		        else:
-		            x_point=(self.x_scale[cell_j] + self.x_scale[cell_j-1])/2
-		            y_point=self.y_scale[cell_i]
+		        x_point=query_x
+		        y_point=self.y_scale[cell_i]
 
 		    elif query_i < cell_i:
-		        if cell_j == 0:
-		            x_point = self.x_scale[cell_j]/2
-		        else:
-		            x_point=(self.x_scale[cell_j] + self.x_scale[cell_j-1])/2
-		            y_point=self.y_scale[cell_i-1]
+		        x_point=query_x
+		        y_point=self.y_scale[cell_i-1]
 
 		elif query_i < cell_i:
 
@@ -204,6 +197,11 @@ class Regular():
     def find_first_k_elements(self, k, query_x, query_y):
         cell_no = self.cell_no(query_x, query_y)
         k_list = self.get_all_els(cell_no)
+        bucket_access_count =0
+
+        self.bucket_access_record[cell_no] =1
+
+        bucket_access_count += ceil(self.mapper[cell_no][2]/float(self.bucket_size))
 
         cycle_no = 1
 
@@ -215,6 +213,10 @@ class Regular():
 
             for cell in cycle:
                 k_list += get_all_els(cell[0])
+                self.bucket_access_record[cell[0]] =1
+
+                bucket_access_count += ceil(self.mapper[cell[0]][2]/float(self.bucket_size))
+
                 if len(k_list) >= k:
                     break
             cycle_no += 1
@@ -222,17 +224,66 @@ class Regular():
         if len(k_list) < k:
             print "The grid does not contains k elements"
             k_list = self.get_euclidian_dist_for_list(query_x, query_y, k_list)
-            return k_list
+            return (k_list, bucket_access_count)
 
-        k_list = k_list[0:k]
-        return k_list
+        k_list = self.get_euclidian_dist_for_list(query_x, query_y, k_list[0:k])
 
-
-
+        return (k_list, bucket_access_count)
 
 
-    def knn(k, x, y):
-        pass
+
+
+
+    def knn(self, k, x, y):
+        self.bucket_access_record=[]
+
+        for i in len(self.mapper):
+            self.bucket_access_record.append(0)
+
+        k_list, bucket_access_count = self.find_first_k_elements(k, x, y)
+
+        if len(k_list) < k:
+            return (k_list, bucket_access_count)
+
+    #-------------------------------------------------------------------
+
+
+        cycle_no =1
+        alreay_visited_cycle = False
+        while(True):
+            last_list = k_list
+            cycle = self.cycle(x, y, cycle_no)
+            if len(cycle) == 0:
+                break
+
+            for cell in cycle:
+                if self.bucket_access_record[cell[0]] == 1:
+                    already_visited_cycle = True
+                    continue
+
+                if cell[1] < k_list[k-1][3]:
+                    self.bucket_access_record[cell[0]] =1
+
+                    temp_list = self.get_all_els(cell[0])
+                    temp_list = self.get_euclidian_dist_for_list(x, y, temp_list)
+                    k_list += temp_list
+                    k_list.sort(key = lambda x: x[3])
+                    k_list = k_list[0:k]
+                    bucket_access_count += ceil(self.mapper[cell[0]][2]/float(self.bucket_size))
+
+            if last_list == k_list and already_visited_cycle is False:
+                break
+
+            already_visited_cycle = False
+
+            cycle_no +=1
+
+        return (k_list, bucket_access_count)
+
+
+
+
+
 
 
 
@@ -250,7 +301,7 @@ class Regular():
 	cycle_cell_i, cycle_cell_j = index_i, index_j + cycle_no
 
         if cycle_cell_i in range(len(self.y_scale)) and cycle_cell_j in range(len(self.x_scale)):
-    	    cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+    	    cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(query_x, query_y, cycle_cell_i, cycle_cell_j)
 
             euclidian_dist = self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
 	    cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
@@ -264,7 +315,7 @@ class Regular():
 		if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
                     continue
 
-		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(query_x, query_y, cycle_cell_i, cycle_cell_j)
 		euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
 		cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
 
@@ -276,7 +327,7 @@ class Regular():
 
 		if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		    continue
-		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(query_x, query_y, cycle_cell_i, cycle_cell_j)
 		euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
 		cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
 
@@ -288,7 +339,7 @@ class Regular():
 		if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		    continue
 
-		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(query_x, query_y, cycle_cell_i, cycle_cell_j)
 	        euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
 		cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
 
@@ -300,7 +351,7 @@ class Regular():
 		if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		    continue
 
-		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(query_x, query_y, cycle_cell_i, cycle_cell_j)
 		euclidian_dist = self. get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
 		cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
 
@@ -312,7 +363,7 @@ class Regular():
 		if cycle_cell_i not in range(len(self.y_scale)) or cycle_cell_j not in range(len(self.x_scale)):
 		    continue
 
-		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(index_i, index_j, cycle_cell_i, cycle_cell_j)
+		cycle_cell_x, cycle_cell_y = self.get_x_y_for_euclidian_dist(query_x, query_y, cycle_cell_i, cycle_cell_j)
 		euclidian_dist =  self.get_euclidian_dist(query_x, query_y, cycle_cell_x, cycle_cell_y)
 		cell_no = self.get_cell_no(cycle_cell_i, cycle_cell_j)
 
