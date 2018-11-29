@@ -1,18 +1,15 @@
 import math
 
-class Regular():
+class Grid():
 
     def __init__(self):
         self.x_max = 400
         self.y_max = 400
 
-        self.cut_along_x = int(input("Enter block size along x: "))
-        self.cut_along_y = int(input("Enter block size along y: "))
-
 	self.bucket_size = int(input("Enter the bucket size: "))
 
-        self.x_scale = range(self.cut_along_x, self.x_max, self.cut_along_x) + [self.x_max]
-        self.y_scale = range(self.cut_along_y, self.y_max, self.cut_along_y) + [self.y_max]
+        self.x_scale = [400]
+        self.y_scale = [400]
 
 	self.mapper = []
 
@@ -20,10 +17,72 @@ class Regular():
 
 
         for i in range(len(self.x_scale)*len(self.y_scale)):
-		filename = "{}-array_bucket-1.txt".format(i)
+		filename = "{}-grid_bucket.txt".format(i)
         	with open(filename, "w+") as opened_file:
 			pass
-		self.mapper.insert(i,[filename, filename, 0])
+		self.mapper.insert(i,[filename, 0])
+
+
+
+
+
+
+
+    def divide_x_axis(self, division_point):
+        j=0
+	while j < len(self.x_scale):
+            if division_point <= self.x_scale[j]:
+                break
+	    j+=1
+
+        self.x_scale.insert(j, division_point)
+
+        next_jump_in_mapper = len(self.x_scale) +1
+        div_cell_no = j
+
+        for ~ in range(len(self.y_scale)):
+            filename = self.mapper[div_cell_no][0]
+            self.mapper.insert(div_cell_no, [filename, 0])
+
+            with open(filename) as myfile:
+                elements = myfile.read().splitlines()
+
+
+            elements =  [map(int, point.split(" ")) for point in elements]
+            for point in elements:
+                i,j = self.get_indices_of_2dcell(point[1], point[2])
+                mapper_index = self.get_cell_no(i, j)
+                self.mapper[mapper_index][1] +=1
+
+            div_cell_no += next_jump_in_mapper
+
+
+    def divide_y_axis(self, division_point):
+        i=0
+	while i < len(self.y_scale):
+            if division_point <= self.y_scale[i]:
+                break
+	    i+=1
+
+        self.y_scale.insert(i, division_point)
+
+        div_cell_no = self.get_cell_no(i, 0)
+
+        for ~ in range(len(self.x_scale)):
+            filename = self.mapper[div_cell_no][0]
+            self.mapper.insert(div_cell_no + len(self.x_scale), [filename, 0])
+
+            with open(filename) as myfile:
+                elements = myfile.read().splitlines()
+
+
+            elements =  [map(int, point.split(" ")) for point in elements]
+            for point in elements:
+                i,j = self.get_indices_of_2dcell(point[1], point[2])
+                mapper_index = self.get_cell_no(i, j)
+                self.mapper[mapper_index][1] +=1
+
+            div_cell_no +=1
 
 
 
@@ -44,7 +103,7 @@ class Regular():
 
 	elif self.mapper[mapper_index][elements_in_bucket] % self.bucket_size == 0:
 
-    	    new_filename = "{}-array_bucket-{}.txt".format(mapper_index, (self.mapper[mapper_index][elements_in_bucket]/self.bucket_size) + 1)
+    	    new_filename = "{}-grid_bucket.txt".format(mapper_index)
     	    with open(new_filename , "a+") as opened_file:
     		opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
 
@@ -77,10 +136,10 @@ class Regular():
 
     def get_all_els(self, cell_no):
         bucket, last_bucket, num_of_elem = 0,1,2
-        
+
         filename = self.mapper[cell_no][bucket]
-        
-        
+
+
         points=[]
 
         while(True):
@@ -199,7 +258,7 @@ class Regular():
 
     def find_first_k_elements(self, k, query_x, query_y):
     	query_i, query_j = self.get_indices_of_2dcell(query_x, query_y)
-    	
+
         cell_no = self.get_cell_no(query_i, query_j)
         k_list = self.get_all_els(cell_no)
         bucket_access_count =0
@@ -387,14 +446,14 @@ def insert_into_array(regular, dataset_name):
 	with open(dataset_name) as dataset_file:
 		points = dataset_file.read().splitlines()
 		points = [map(int, point.split(" ")) for point in points]
-		
+
 	for point in points:
 		regular.insert(point[0], point[1], point[2])
-	
+
 	k = int(input("Enter k : "))
 	x = int(input("query x : "))
-	y = int(input("query y : "))	
+	y = int(input("query y : "))
 	k_list, bucket_access = regular.knn(k, x, y)
 	print(k_list," - ", bucket_access)
-	
+
 insert_into_array(reg, "30000_datapoints.txt")

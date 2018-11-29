@@ -1,18 +1,15 @@
 import math
 
-class Regular():
+class Grid():
 
     def __init__(self):
         self.x_max = 400
         self.y_max = 400
 
-        self.cut_along_x = int(input("Enter block size along x: "))
-        self.cut_along_y = int(input("Enter block size along y: "))
-
 	self.bucket_size = int(input("Enter the bucket size: "))
 
-        self.x_scale = range(self.cut_along_x, self.x_max, self.cut_along_x) + [self.x_max]
-        self.y_scale = range(self.cut_along_y, self.y_max, self.cut_along_y) + [self.y_max]
+        self.x_scale = [400]
+        self.y_scale = [400]
 
 	self.mapper = []
 
@@ -20,7 +17,7 @@ class Regular():
 
 
         for i in range(len(self.x_scale)*len(self.y_scale)):
-		filename = "{}-array_bucket-1.txt".format(i)
+		filename = "{}-grid_bucket.txt".format(i)
         	with open(filename, "w+") as opened_file:
 			pass
 		self.mapper.insert(i,[filename, filename, 0])
@@ -44,7 +41,7 @@ class Regular():
 
 	elif self.mapper[mapper_index][elements_in_bucket] % self.bucket_size == 0:
 
-    	    new_filename = "{}-array_bucket-{}.txt".format(mapper_index, (self.mapper[mapper_index][elements_in_bucket]/self.bucket_size) + 1)
+    	    new_filename = "{}-grid_bucket.txt".format(mapper_index)
     	    with open(new_filename , "a+") as opened_file:
     		opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
 
