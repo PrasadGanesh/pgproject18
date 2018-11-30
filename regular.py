@@ -392,21 +392,33 @@ def insert_into_array(regular, dataset_name):
 		regular.insert(point[0], point[1], point[2])
 	
 	while True:
-            choice = int(input("\n=> for knn press 1: \n=> for printing the data structure press 2: \n=> exit 0: \n: "))
+            choice = int(input("\n=> for knn press 1: \n=> for printing the data structure press 2: \n=> project related info press 3: \n=> exit 0: \n: "))
 
             if choice == 1:
                 k = int(input("Enter k : "))
-	        x = int(input("query x : "))
-	        y = int(input("query y : "))
-	        k_list, bucket_access = regular.knn(k, x, y)
-	        print k_list
-	        print("Bucket access count: ", bucket_access)
-
+                x = int(input("query x : "))
+                y = int(input("query y : "))
+                k_list, bucket_access = regular.knn(k, x, y)
+                print k_list
+                print("Bucket access count: ", bucket_access)
+                
             elif choice == 2:
                 if len(regular.mapper) > 1000:
                     ch = int(input("data structure has more than 1000 value, print[1/0]: "))
                     if ch == 1:
                         print regular.mapper
+                        
+           	elif choice == 3:
+           		ac=0
+           		print "hello"
+           		k=[5,20,50,100]
+           		for ki in k:
+           			for i in range(8):
+           				x=randint(0,400)
+           				y=randint(0,400)
+           				klist,bac = regular.knn(ki,x,y)
+                		ac += bac
+        			print ac/float(ki)
 
             else:
                 return
