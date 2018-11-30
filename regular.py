@@ -391,10 +391,24 @@ def insert_into_array(regular, dataset_name):
 	for point in points:
 		regular.insert(point[0], point[1], point[2])
 	
-	k = int(input("Enter k : "))
-	x = int(input("query x : "))
-	y = int(input("query y : "))	
-	k_list, bucket_access = regular.knn(k, x, y)
-	print(k_list," - ", bucket_access)
-	
-insert_into_array(reg, "30000_datapoints.txt")
+	while True:
+            choice = int(input("\n=> for knn press 1: \n=> for printing the data structure press 2: \n=> exit 0: \n: "))
+
+            if choice == 1:
+                k = int(input("Enter k : "))
+	        x = int(input("query x : "))
+	        y = int(input("query y : "))
+	        k_list, bucket_access = regular.knn(k, x, y)
+	        print k_list
+	        print("Bucket access count: ", bucket_access)
+
+            elif choice == 2:
+                if len(regular.mapper) > 1000:
+                    ch = int(input("data structure has more than 1000 value, print[1/0]: "))
+                    if ch == 1:
+                        print regular.mapper
+
+            else:
+                return
+dataset = input("Enter dataset name: ")
+insert_into_array(reg, dataset)

@@ -13,14 +13,18 @@ class Grid():
 
 	self.mapper = []
 
+        self.bucket_count = 0
+
         self.bucket_access_record=[]
+        self.file_access_record={}
 
 
         for i in range(len(self.x_scale)*len(self.y_scale)):
-		filename = "{}-grid_bucket.txt".format(i)
+		filename = "{}-grid_bucket.txt".format(self.bucket_count)
         	with open(filename, "w+") as opened_file:
 			pass
-		self.mapper.insert(i,[filename, 0])
+		self.mapper.insert(i,[filename, 0, 0])
+                self.bucket_count +=1
 
 
 
@@ -37,22 +41,28 @@ class Grid():
 
         self.x_scale.insert(j, division_point)
 
-        next_jump_in_mapper = len(self.x_scale) +1
+        next_jump_in_mapper = len(self.x_scale)
         div_cell_no = j
 
-        for ~ in range(len(self.y_scale)):
+
+        for unused in range(len(self.y_scale)):
             filename = self.mapper[div_cell_no][0]
-            self.mapper.insert(div_cell_no, [filename, 0])
+            self.mapper.insert(div_cell_no, [filename, 0, 0])
 
             with open(filename) as myfile:
                 elements = myfile.read().splitlines()
+
+            self.mapper[div_cell_no][1] = 0
+
+            self.mapper[div_cell_no][2] = len(elements)
 
 
             elements =  [map(int, point.split(" ")) for point in elements]
             for point in elements:
                 i,j = self.get_indices_of_2dcell(point[1], point[2])
                 mapper_index = self.get_cell_no(i, j)
-                self.mapper[mapper_index][1] +=1
+                if mapper_index == div_cell_no:
+                	self.mapper[mapper_index][1] +=1
 
             div_cell_no += next_jump_in_mapper
 
@@ -68,19 +78,23 @@ class Grid():
 
         div_cell_no = self.get_cell_no(i, 0)
 
-        for ~ in range(len(self.x_scale)):
+        for unused in range(len(self.x_scale)):
             filename = self.mapper[div_cell_no][0]
-            self.mapper.insert(div_cell_no + len(self.x_scale), [filename, 0])
+            self.mapper.insert(div_cell_no + len(self.x_scale), [filename, 0, 0])
 
             with open(filename) as myfile:
                 elements = myfile.read().splitlines()
 
+            self.mapper[div_cell_no + len(self.x_scale)][1] = 0
+
+            self.mapper[div_cell_no + len(self.x_scale)][2] = len(elements)
 
             elements =  [map(int, point.split(" ")) for point in elements]
             for point in elements:
                 i,j = self.get_indices_of_2dcell(point[1], point[2])
                 mapper_index = self.get_cell_no(i, j)
-                self.mapper[mapper_index][1] +=1
+                if mapper_index == (div_cell_no + len(self.x_scale)):
+                	self.mapper[mapper_index][1] +=1
 
             div_cell_no +=1
 
@@ -91,32 +105,122 @@ class Grid():
 
 
     def insert(self, id, x, y):
-	bucket, last_bucket, elements_in_bucket = 0, 1, 2
+	bucket, num_of_els_in_cell, elements_in_bucket = 0, 1, 2
 
         i,j = self.get_indices_of_2dcell(x,y)
 	mapper_index = self.get_cell_no(i, j)
 
-	if self.mapper[mapper_index][elements_in_bucket] < self.bucket_size:
+	if self.mapper[mapper_index][num_of_els_in_cell] < self.bucket_size:
 
-	    with open(self.mapper[mapper_index][bucket], "a+") as opened_file:
-		opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
+            if self.mapper[mapper_index][elements_in_bucket] < self.bucket_size:
 
-	elif self.mapper[mapper_index][elements_in_bucket] % self.bucket_size == 0:
+                with open(self.mapper[mapper_index][bucket], "a+") as opened_file:
+		    opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
 
-    	    new_filename = "{}-grid_bucket.txt".format(mapper_index)
-    	    with open(new_filename , "a+") as opened_file:
-    		opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
+	        self.mapper[mapper_index][elements_in_bucket] += 1
+                self.mapper[mapper_index][num_of_els_in_cell] += 1
 
-            with open(self.mapper[mapper_index][last_bucket], "a+") as opened_file:
-                opened_file.write(new_filename)
+            elif self.mapper[mapper_index][elements_in_bucket] == self.bucket_size:
+                filename = self.mapper[mapper_index][bucket]
 
-            self.mapper[mapper_index][last_bucket] = new_filename
-	else:
+                with open(filename) as myfile:
+                    elements = myfile.read().splitlines()
 
-            with open(self.mapper[mapper_index][last_bucket], "a+") as opened_file:
-	        opened_file.write("{} {} {}{}".format(id, x, y, '\n'))
+                elements =  [map(int, point.split(" ")) for point in elements] + [[id,x,y]]
 
-	self.mapper[mapper_index][elements_in_bucket] += 1
+                els_in_new_bucket = [point for point in elements if self.get_cell_no_using_xy(point[1], point[2]) == mapper_index]
+
+                els_in_old_bucket = [point for point in elements if point not in els_in_new_bucket]
+
+                for old_point in els_in_old_bucket:
+                    index = self.get_cell_no_using_xy(old_point[1], old_point[2])
+                    self.mapper[index][elements_in_bucket] = len(els_in_old_bucket)
+
+                with open(filename, 'w') as opened_file:
+                    for old_point in els_in_old_bucket:
+                        opened_file.write("{} {} {}{}".format(old_point[0], old_point[1], old_point[2], '\n'))
+
+                new_filename = "{}-grid_bucket.txt".format(self.bucket_count+1)
+                self.bucket_count +=1
+
+
+                with open(new_filename, 'w') as opened_file:
+                    for new_point in els_in_new_bucket:
+                        opened_file.write("{} {} {}{}".format(new_point[0], new_point[1], new_point[2], '\n'))
+
+                self.mapper[mapper_index][bucket] = new_filename
+                self.mapper[mapper_index][num_of_els_in_cell] = len(els_in_new_bucket)
+                self.mapper[mapper_index][elements_in_bucket] = len(els_in_new_bucket)
+
+        else:
+            filename = self.mapper[mapper_index][bucket]
+
+            with open(filename) as myfile:
+                    elements = myfile.read().splitlines()
+
+            elements =  [map(int, point.split(" ")) for point in elements] + [[id,x,y]]
+            max_x = max(elements, key = lambda x: x[1])[1]
+            max_y = max(elements, key = lambda x: x[2])[2]
+            min_x = min(elements, key = lambda x: x[1])[1]
+            min_y = min(elements, key = lambda x: x[2])[2]
+
+            span_along_x = max_x-min_x
+            span_along_y = max_y-min_y
+
+            if span_along_x > span_along_y:
+                div_point = (max_x+min_x)/2
+                self.divide_x_axis(div_point)
+
+                els_in_new_bucket = [point for point in elements if self.get_cell_no_using_xy(point[1], point[2]) == mapper_index]
+
+                els_in_old_bucket = [point for point in elements if point not in els_in_new_bucket]
+
+                new_filename = "{}-grid_bucket.txt".format(self.bucket_count+1)
+                self.bucket_count +=1
+
+
+                with open(new_filename, 'w') as opened_file:
+                    for new_point in els_in_new_bucket:
+                        opened_file.write("{} {} {}{}".format(new_point[0], new_point[1], new_point[2], '\n'))
+
+                self.mapper[mapper_index][bucket] = new_filename
+                self.mapper[mapper_index][num_of_els_in_cell] = len(els_in_new_bucket)
+                self.mapper[mapper_index][elements_in_bucket] = len(els_in_new_bucket)
+
+                with open(filename, 'w') as opened_file:
+                    for old_point in els_in_old_bucket:
+                        opened_file.write("{} {} {}{}".format(old_point[0], old_point[1], old_point[2], '\n'))
+
+                self.mapper[mapper_index][num_of_els_in_cell] = len(els_in_old_bucket)
+                self.mapper[mapper_index][elements_in_bucket] = len(els_in_old_bucket)
+
+            else:
+                div_point = (max_y+min_y)/2
+                self.divide_y_axis(div_point)
+
+                els_in_new_bucket = [point for point in elements if self.get_cell_no_using_xy(point[1], point[2]) == mapper_index]
+
+                els_in_old_bucket = [point for point in elements if point not in els_in_new_bucket]
+
+                new_filename = "{}-grid_bucket.txt".format(self.bucket_count+1)
+                self.bucket_count +=1
+
+
+                with open(new_filename, 'w') as opened_file:
+                    for new_point in els_in_new_bucket:
+                        opened_file.write("{} {} {}{}".format(new_point[0], new_point[1], new_point[2], '\n'))
+
+                self.mapper[mapper_index + len(self.x_scale)][bucket] = new_filename
+                self.mapper[mapper_index + len(self.x_scale)][num_of_els_in_cell] = len(els_in_new_bucket)
+                self.mapper[mapper_index + len(self.x_scale)][elements_in_bucket] = len(els_in_new_bucket)
+
+                with open(filename, 'w') as opened_file:
+                    for old_point in els_in_old_bucket:
+                        opened_file.write("{} {} {}{}".format(old_point[0], old_point[1], old_point[2], '\n'))
+
+                self.mapper[mapper_index][num_of_els_in_cell] = len(els_in_old_bucket)
+                self.mapper[mapper_index][elements_in_bucket] = len(els_in_old_bucket)
+
 
 
 
@@ -138,6 +242,7 @@ class Grid():
         bucket, last_bucket, num_of_elem = 0,1,2
 
         filename = self.mapper[cell_no][bucket]
+        print filename
 
 
         points=[]
@@ -146,12 +251,6 @@ class Grid():
             with open(filename) as myfile:
                 elements = myfile.read().splitlines()
 
-            if len(elements) == self.bucket_size +1:
-                filename = elements[-1]
-                points += elements[0:-1]
-                continue
-
-            else:
                 points += elements
                 break
 
@@ -176,6 +275,10 @@ class Grid():
 		    i+=1
 
 		return (i,j)
+
+    def get_cell_no_using_xy(self, x, y):
+        i,j = self.get_indices_of_2dcell(x, y)
+        return self.get_cell_no(i, j)
 
     def get_cell_no(self, index_i, index_j):
 		cell_no = (len(self.x_scale) * index_i) + index_j
@@ -260,7 +363,20 @@ class Grid():
     	query_i, query_j = self.get_indices_of_2dcell(query_x, query_y)
 
         cell_no = self.get_cell_no(query_i, query_j)
+        filename = self.mapper[cell_no][0]
+
+        self.file_access_record[filename]=1
+
         k_list = self.get_all_els(cell_no)
+
+        temp_k_list = []
+        '''
+        for temp in k_list:
+            if temp not in temp_k_list:
+                temp_k_list.append(temp)
+
+        k_list = temp_k_list
+        '''
         bucket_access_count =0
 
         self.bucket_access_record[cell_no] =1
@@ -276,10 +392,12 @@ class Grid():
                 break
 
             for cell in cycle:
-                k_list += get_all_els(cell[0])
-                self.bucket_access_record[cell[0]] =1
+                if not self.file_access_record.has_key(self.mapper[cell[0]][0]):
+                    k_list += self.get_all_els(cell[0])
+                    self.bucket_access_record[cell[0]] =1
 
-                bucket_access_count += ceil(self.mapper[cell[0]][2]/float(self.bucket_size))
+                    bucket_access_count += math.ceil(self.mapper[cell[0]][2]/float(self.bucket_size))
+                    self.file_access_record[self.mapper[cell[0]][0]] =1
 
                 if len(k_list) >= k:
                     break
@@ -325,15 +443,19 @@ class Grid():
                     already_visited_cycle = True
                     continue
 
+
+
                 if cell[1] < k_list[k-1][3]:
                     self.bucket_access_record[cell[0]] =1
 
-                    temp_list = self.get_all_els(cell[0])
-                    temp_list = self.get_euclidian_dist_for_list(x, y, temp_list)
-                    k_list += temp_list
-                    k_list.sort(key = lambda x: x[3])
-                    k_list = k_list[0:k]
-                    bucket_access_count += math.ceil(self.mapper[cell[0]][2]/float(self.bucket_size))
+                    if not self.file_access_record.has_key(self.mapper[cell[0]][0]):
+                        temp_list = self.get_all_els(cell[0])
+                        temp_list = self.get_euclidian_dist_for_list(x, y, temp_list)
+                        k_list += temp_list
+                        k_list.sort(key = lambda x: x[3])
+                        k_list = k_list[0:k]
+                        bucket_access_count += math.ceil(self.mapper[cell[0]][2]/float(self.bucket_size))
+                        self.file_access_record[self.mapper[cell[0]][0]] =1
 
             if last_list == k_list and already_visited_cycle is False:
                 break
@@ -440,20 +562,35 @@ class Mapper():
         mapper=[]
 
 
-reg = Regular()
+grid = Grid()
 
-def insert_into_array(regular, dataset_name):
+def insert_into_array(grid, dataset_name):
 	with open(dataset_name) as dataset_file:
 		points = dataset_file.read().splitlines()
 		points = [map(int, point.split(" ")) for point in points]
 
 	for point in points:
-		regular.insert(point[0], point[1], point[2])
+		grid.insert(point[0], point[1], point[2])
+                #print("inserting :",point[0])
 
-	k = int(input("Enter k : "))
-	x = int(input("query x : "))
-	y = int(input("query y : "))
-	k_list, bucket_access = regular.knn(k, x, y)
-	print(k_list," - ", bucket_access)
+        while True:
+            choice = int(input("\n=> for knn press 1: \n=> for printing the data structure press 2: \n=> exit 0: \n: "))
 
-insert_into_array(reg, "30000_datapoints.txt")
+            if choice == 1:
+                k = int(input("Enter k : "))
+	        x = int(input("query x : "))
+	        y = int(input("query y : "))
+	        k_list, bucket_access = grid.knn(k, x, y)
+                print k_list
+	        print("Bucket access count: ", bucket_access)
+
+            elif choice == 2:
+                if len(grid.mapper) > 1000:
+                    ch = int(input("data structure has more than 1000 value, print[1/0]: "))
+                    if ch == 1:
+                        print grid.mapper
+
+            else:
+                return
+dataset = input("Enter dataset name: ")
+insert_into_array(grid, dataset)
