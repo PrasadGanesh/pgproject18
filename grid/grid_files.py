@@ -1,4 +1,5 @@
 import math
+from random import randint
 
 class Grid():
 
@@ -242,7 +243,6 @@ class Grid():
         bucket, last_bucket, num_of_elem = 0,1,2
 
         filename = self.mapper[cell_no][bucket]
-        print filename
 
 
         points=[]
@@ -418,6 +418,7 @@ class Grid():
 
     def knn(self, k, x, y):
         self.bucket_access_record=[]
+        self.file_access_record={}
 
         for i in range(len(self.mapper)):
             self.bucket_access_record.append(0)
@@ -571,7 +572,7 @@ def insert_into_array(grid, dataset_name):
 
 	for point in points:
 		grid.insert(point[0], point[1], point[2])
-                #print("inserting :",point[0])
+                print("inserting :",point[0])
 
         while True:
             choice = int(input("\n=> for knn press 1: \n=> for printing the data structure press 2: \n=> project related info press 3: \n=> exit 0: \n: "))
@@ -589,17 +590,20 @@ def insert_into_array(grid, dataset_name):
                     ch = int(input("data structure has more than 1000 value, print[1/0]: "))
                     if ch == 1:
                         print grid.mapper
+                else:
+                	print grid.mapper
                         
             elif choice == 3:
             	ac=0
-				k=[5,20,50,100]
-				for ki in k:
-       				 for i in range(8):
-              		 	x=randint(0,400)
+		k=[5,20,50,100]
+		for ki in k:
+			ac=0
+       			for i in range(8):
+              			x=randint(0,400)
                 		y=randint(0,400)
                 		klist,bac = grid.knn(ki,x,y)
                 		ac+=bac
-        			print ac/float(ki)
+        		print ac/float(8)
 
 
             else:
